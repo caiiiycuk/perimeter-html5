@@ -4,6 +4,9 @@
 #endif
 #include "StdAfxRD.h"
 #include "D3DRender.h"
+#ifdef GPX
+#include <c/gamepix.h>
+#endif
 #include "Font.h"
 #include "files/files.h"
 #include "DrawBuffer.h"
@@ -180,12 +183,21 @@ uint32_t cD3DRender::GetD3DFVFFromFormat(vertex_fmt_t fmt) {
 
 uint32_t cD3DRender::GetWindowCreationFlags() const {
     uint32_t flags = cInterfaceRenderDevice::GetWindowCreationFlags();
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(PERIMETER_GICH)
     //On non Windows we use dxvk which uses Vulkan
     flags |= SDL_WINDOW_VULKAN;
 #endif
+    //With the shim (PERIMETER_GICH) the window is for input only: the shim
+    //draws through EGL on Linux and WebGL on the web, and asks for no flag.
     return flags;
 }
+
+#if defined(PERIMETER_GICH) && !defined(__EMSCRIPTEN__)
+//In D3DRenderGich.cpp. It needs SDL_syswm.h, whose Xlib typedef XErrorHandler
+//collides with XTool's struct of the same name, so it cannot be included here
+//next to the game's headers.
+void gich_hand_over_window(SDL_Window* window);
+#endif
 
 int cD3DRender::Init(int xscr,int yscr,int Mode, SDL_Window* wnd, int RefreshRateInHz)
 {
@@ -200,6 +212,9 @@ int cD3DRender::Init(int xscr,int yscr,int Mode, SDL_Window* wnd, int RefreshRat
 	memset(ArrayRenderState,0xEF,sizeof(ArrayRenderState));
 
     this->hWnd = get_hwnd_from_sdl_window(sdl_window);
+#if defined(PERIMETER_GICH) && !defined(__EMSCRIPTEN__)
+    gich_hand_over_window(sdl_window);
+#endif
 
 	if(!lpD3D)
 		RDERR((lpD3D=Direct3DCreate9(D3D_SDK_VERSION))==0);
@@ -837,6 +852,13 @@ int cD3DRender::Flush(bool wnd)
 		OutText(10,120,str);
 /**/
 	}
+
+#ifdef GPX
+    //The frame is on screen; tell the wrapper, as the sokol renderer does in
+    //its Flush. Without this the startup loader never goes away: the wrapper
+    //hides it on the first frameReady, and the D3D9 path never sent one.
+    gpx()->sys()->frameReady();
+#endif
 
 	return 0;
 }

@@ -348,6 +348,9 @@ int cD3DRender::Init(int xscr,int yscr,int Mode, SDL_Window* wnd, int RefreshRat
     
     //Workaround for some distros (Ubuntu?) setting window bigger than originally requested
     //Since Steam Linux Runtime is based on ubuntu it affects there too
+    //Not under GPX: there the window is the page's canvas and the game does
+    //not resize it; a size that differs from ScreenSize is the page's choice.
+#ifndef GPX
     if (sdl_window && (RenderMode & RENDERDEVICE_MODE_WINDOW)) {
         Vect2i size;
         SDL_GetWindowSize(sdl_window, &size.x, &size.y);
@@ -360,6 +363,7 @@ int cD3DRender::Init(int xscr,int yscr,int Mode, SDL_Window* wnd, int RefreshRat
             SDL_SetWindowPosition(sdlWindow, windowPos, windowPos);
         }
     }
+#endif
 
     RenderSubmitEvent(RenderEvent::INIT, "D3D9 end");
 	return 0;
@@ -416,6 +420,13 @@ void cD3DRender::UpdateRenderMode()
     RDCALL(lpD3D->GetAdapterDisplayMode(Adapter,&d3ddm));
     MaxScreenSize.x = max(MaxScreenSize.x, static_cast<int>(d3ddm.Width));
     MaxScreenSize.y = max(MaxScreenSize.y, static_cast<int>(d3ddm.Height));
+    //The back buffer must hold the screen the device was asked for, whatever
+    //the desktop modes say: on the web SDL reports the screen in CSS pixels
+    //and the canvas is in device pixels, so the requested size can exceed
+    //every desktop mode. Drawing was then clipped to the smaller back buffer
+    //and Present stretched that part over the whole canvas.
+    MaxScreenSize.x = max(MaxScreenSize.x, ScreenSize.x);
+    MaxScreenSize.y = max(MaxScreenSize.y, ScreenSize.y);
     
 	d3dpp.AutoDepthStencilFormat    = is32zbuffer ? D3DFMT_D24S8 : D3DFMT_D16;
 	d3dpp.BackBufferFormat          = GetBackBufferFormat(RenderMode);

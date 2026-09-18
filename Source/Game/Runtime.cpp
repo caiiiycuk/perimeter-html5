@@ -474,9 +474,14 @@ void PerimeterSetupDisplayMode() {
             if (SDL_GetWindowFlags(sdlWindow)&(SDL_WINDOW_MAXIMIZED|SDL_WINDOW_MINIMIZED)) {
                 SDL_RestoreWindow(sdlWindow);
             }
+#ifndef GPX
+            //Under GPX the canvas belongs to the page: its size is handed to
+            //the game and the game never resizes it. The actual size is read
+            //back below.
             SDL_SetWindowSize(sdlWindow, mode.w, mode.h);
 #if PERIMETER_DEBUG
             printf("SDL_SetWindowSize\n");
+#endif
 #endif
             
             //Grab window

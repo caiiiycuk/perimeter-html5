@@ -137,6 +137,13 @@ void GraphOptions::load(const char* sectionName, const char* iniFileName) {
     }
     resSet.insert(resolution);
 
+#ifdef GPX
+    //The page owns the canvas and hands its size to the game; there is no
+    //other resolution to offer, and apply() does not change it either.
+    resolutions.emplace_back(resolution);
+    return;
+#endif
+
     //Get display modes for screens
     Vect2i smallest(0, 0);
     SDL_DisplayMode current;

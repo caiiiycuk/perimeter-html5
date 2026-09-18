@@ -116,6 +116,10 @@ void OnComboGraphicsResolution(CShellWindow* pWnd, InterfaceEventCode code, int 
 
 			pCombo->size = pCombo->Array.size();
 		}
+#ifdef GPX
+        //The page sets the resolution; the combo shows it and takes no input.
+        pCombo->Enable(false);
+#endif
 	} else if ( code == EVENT_UNPRESSED || code == EVENT_RUNPRESSED ) {
         if (graphOptions.resolutions.empty()) return;
         graphOptions.resolution = graphOptions.resolutions[pCombo->pos];

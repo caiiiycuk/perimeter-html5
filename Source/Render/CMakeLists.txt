@@ -93,15 +93,15 @@ if(OPTION_D3D9)
     #D3D9 Renderer enabled
     if(PERIMETER_WINDOWS)
         #DirectX SDK libs
-        target_include_directories(Render PUBLIC "${PROJECT_SOURCE_DIR}/MSDXSDK_02_06/Include")
+        target_include_directories(Render PUBLIC "${PROJECT_SOURCE_DIR}/Thirdparty/MSDXSDK_02_06/Include")
 
         #DirectX 64 or 32 libs
         IF(PERIMETER_ARCH_64)
             MESSAGE("Linking against DirectX 64 bits")
-            set(LIBS_MSDXSDK ${PROJECT_SOURCE_DIR}/MSDXSDK_02_06/Lib/x64)
+            set(LIBS_MSDXSDK ${PROJECT_SOURCE_DIR}/Thirdparty/MSDXSDK_02_06/Lib/x64)
         ELSE()
             MESSAGE("Linking against DirectX 32 bits")
-            set(LIBS_MSDXSDK ${PROJECT_SOURCE_DIR}/MSDXSDK_02_06/Lib/x86)
+            set(LIBS_MSDXSDK ${PROJECT_SOURCE_DIR}/Thirdparty/MSDXSDK_02_06/Lib/x86)
         ENDIF()
         target_link_directories(Render BEFORE PUBLIC ${LIBS_MSDXSDK})
 
@@ -169,9 +169,10 @@ if(NEED_DXVK)
             set(DXVK_GIT_URL https://github.com/doitsujin/dxvk)
         endif ()
         if (NOT DXVK_GIT_TAG)
-            set(DXVK_GIT_TAG "80e075406b1b7d9d2508c9dc05e9745b3d3cf7e2") # v2.3
+            set(DXVK_GIT_TAG "c3dd74be6baec53786d4e064a572185b70347a17") # tag v2.7.1
         endif ()
-        set(DXVK_BUILD_OPTIONS ${DXVK_BUILD_OPTIONS} -Ddxvk_native_wsi=sdl2)
+        #Disable SDL3 for now to avoid issues with game using SDL2
+        set(DXVK_BUILD_OPTIONS ${DXVK_BUILD_OPTIONS} -Denable_d3d8=false -Dnative_sdl2=enabled -Dnative_sdl3=disabled)
     ENDIF()
     IF("${DXVK_BUILD_COMMAND}" STREQUAL "")
         set(DXVK_BUILD_COMMAND meson setup)

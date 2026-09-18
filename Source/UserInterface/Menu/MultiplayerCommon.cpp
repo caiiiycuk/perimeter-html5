@@ -386,7 +386,7 @@ void onMMInGameChatInputButton(CShellWindow* pWnd, InterfaceEventCode code, int 
 }
 
 int addStringToChatWindowQuant( float, float ) {
-    if (!gameShell) {
+    if (!gameShell || toChatText.empty()) {
         return 0;
     }
     ChatWindow* chatWnd = (ChatWindow*)_shellIconManager.GetWnd(SQSH_MM_LOBBY_CHAT_TEXT);
@@ -395,13 +395,14 @@ int addStringToChatWindowQuant( float, float ) {
         for (auto& t: toChatText) {
             chatWnd->AddString(&t);
         }
+        SND2DPlaySound("mainmenu_clock");
     }
     toChatText.clear();
     return 0;
 }
 
 int addStringToChatHintWindowQuant( float, float ) {
-    if (!gameShell) {
+    if (!gameShell || toChatText.empty()) {
         return 0;
     }
     MTAuto lock(&gameShell->netDataLock);

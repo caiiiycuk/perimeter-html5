@@ -25,7 +25,7 @@
     ref = "master";
   } else {
     url = "https://github.com/doitsujin/dxvk.git";
-    rev = "80e075406b1b7d9d2508c9dc05e9745b3d3cf7e2";
+    rev = "c3dd74be6baec53786d4e064a572185b70347a17";
     ref = "master";
     submodules = true; 
   });
@@ -51,7 +51,7 @@
   };
 in pkgs.stdenv.mkDerivation {
   pname = "perimeter";
-  version = "3.1.9";
+  version = "3.1.11";
   meta = with lib; {
     homepage = "https://github.com/KD-lab-Open-Source/Perimeter/";
     description = "Perimeter - A open-source RTS game from 2004 by K-D LAB";

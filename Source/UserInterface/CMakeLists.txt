@@ -42,6 +42,7 @@ add_library(UserInterface STATIC
         MonoSelect.cpp
         OptionsMenu.cpp
         Menu/MultiplayerCommon.cpp
+        Menu/ControlEditor.cpp
 )
 
 target_include_directories(UserInterface PRIVATE
@@ -56,6 +57,7 @@ target_include_directories(UserInterface PRIVATE
         "${PROJECT_SOURCE_DIR}/Source/Network"
         "${PROJECT_SOURCE_DIR}/Source/Physics"
         "${PROJECT_SOURCE_DIR}/Source/AI"
+        "${PROJECT_SOURCE_DIR}/Source/Integrations"
         "${PROJECT_SOURCE_DIR}/Source/XPrm"
         "${PROJECT_SOURCE_DIR}/Source/Sound"
         "${PROJECT_SOURCE_DIR}/Source/Game"

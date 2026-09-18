@@ -1,13 +1,14 @@
 #ifndef PERIMETER_NETRELAY_H
 #define PERIMETER_NETRELAY_H
 
-static const char* NET_RELAY_DEFAULT_ADDRESSES = "cloud.kdlab.com;europe.cloud.kdlab.com";
+static const char* NET_RELAY_DEFAULT_ADDRESSES = "cloud.kdlab.com;europe.cloud.kdlab.com;cloud.dos.zone";
 #ifdef EMSCRIPTEN
 static const uint16_t NET_RELAY_DEFAULT_PORT = 8443;
 #else
 static const uint16_t NET_RELAY_DEFAULT_PORT = 11654;
 #endif
 
+static const uint16_t NET_RELAY_CONNECT_TIMEOUT = 1000;
 static const uint16_t NET_RELAY_MAX_STRING_LENGTH = 256;
 static const uint16_t NET_RELAY_MAX_LIST_ELEMENTS = 128;
 static const uint16_t NET_RELAY_MAX_MAP_ELEMENTS = 64;

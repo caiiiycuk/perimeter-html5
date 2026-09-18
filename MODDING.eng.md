@@ -6,6 +6,10 @@ in a easier and cleaner manner than previously was possible when dealing with ga
 This file intends to document about some engine internals and changes done since open-source publication, 
 any corrections or updates to reflect current state of capabilities are welcomed.
 
+For some store integrations such as Steam Workshop the mod uploading is available using the following command line:
+
+`perimeter store=steam upload_mod=\"NAME OF MOD\"`
+
 ## Command line
 
 Running the game in console/terminal and adding /? or --help or -h displays available parameters that can be added
@@ -15,7 +19,7 @@ when launching the game. This may be useful to test some options or use alternat
 
 Game now loads mods (each is a folder containing everything) that are located inside `mods` folder at game folder.
 
-Mods can be enabled/disabled in `Main Menu > Community > Mods` by adding `.off` at end of folder name, can be done manually too.
+Mods can be enabled/disabled in `Main Menu > Community > Mods`.
 
 Perimeter: Emperor Testament game folder can also be placed as a mod to include extra units in main game and missions,
 this case is handled in special manner to allow loading certain files only when switching to ET campaign.
@@ -29,17 +33,17 @@ The mod name acts as identifier so no mods with same name can exist, if this hap
 
 Each mod needs a file in the folder named "mod.ini" with at least "name" and "version" filled in "Mod" section.
 This allows players and the game to know some basic info about it.
+English should be used for "description" field.
 
-If current locale description as "description_LOCALE" like "description_english" isn't present the generic "description" will be used.
+If current locale description as "description_LOCALE" like "description_russian" isn't present the default "description" will be used.
 
-The following is a example for a mod having one generic description and translated descriptions while also having
+The following is a example for a mod having description in english and translated descriptions while also having
 minimum version for game required to run:
 ```
 [Mod]
 name=My first mod
 version=1.0.0
 description=&00FF00My first mod!\n&FFFFFFThis is a example of how to write &00FF00colored multiline\nmod description.
-description_english=&00FF00My first mod!\n&FFFFFFThis is a example of how to write &00FF00colored multiline\nmod description.
 description_russian=&00FF00Мой первый мод!\n&FFFFFFЭто пример написания цветного многострочного\nописания мода.
 description_spanish=&00FF00¡Mi primer mod!\n&FFFFFFEste es un ejemplo de cómo escribir una descripción de mod\nmultilínea coloreada.
 authors=First author name\nAnother author name\n3rd Author name
@@ -217,3 +221,10 @@ and call the binary with it like:
 
 which should print us a stacktrace with function names if your OS works with them, on Linux+WINE it seems to be possible
 to reconstruct stacktraces with function names.
+
+## Publishing mods
+
+For publishing simply place your mod in Mods/Publish folder and go to Mods > Publish menu.
+Here select the mod to be published in the list and press Publish button, this will create or update existing published item with the contents of your mod folder.
+
+Currently Steam store integration supports publishing mods in the Steam Workshop, if there is no support for publishing by the active store integration (if any) the menu won't be available.

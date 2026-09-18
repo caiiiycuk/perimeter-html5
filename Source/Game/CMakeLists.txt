@@ -28,6 +28,7 @@ target_include_directories(perimeter PRIVATE
         "${PROJECT_SOURCE_DIR}/Source/Terra"
         "${PROJECT_SOURCE_DIR}/Source/tx3d"
         "${PROJECT_SOURCE_DIR}/Source/UserInterface"
+        "${PROJECT_SOURCE_DIR}/Source/Integrations"
         "${PROJECT_SOURCE_DIR}/Source/Network"
         "${PROJECT_SOURCE_DIR}/Source/Units"
         "${PROJECT_SOURCE_DIR}/Source/Physics"
@@ -40,6 +41,7 @@ target_include_directories(perimeter PRIVATE
 
 SET(perimeter_LINK_LIBS
         #Our libs
+        Integrations
         Units
         UserInterface
         AI
@@ -129,6 +131,7 @@ ADD_DEPENDENCIES(Physics dependencies)
 ADD_DEPENDENCIES(AI dependencies)
 ADD_DEPENDENCIES(GeoLogic dependencies)
 ADD_DEPENDENCIES(HT dependencies)
+ADD_DEPENDENCIES(Integrations dependencies)
 ADD_DEPENDENCIES(perimeter dependencies)
 target_compile_options(perimeter PRIVATE ${PERIMETER_COMPILE_OPTIONS})
 
@@ -136,15 +139,13 @@ SET(perimeter_LINK_LIBS
         #Libraries
         ${EXE_LINK_LIBS_PRE}
         ${perimeter_LINK_LIBS}
-        ${SDL2_LIBRARY}
-        ${SDL2_IMAGE_LIBRARY}
-        ${SDL2_MIXER_LIBRARY}
-        ${SDL2_NET_LIBRARY}
+        ${PERIMETER_SDL_LIBRARY}
+        ${PERIMETER_SDL_EXTRA_LIBRARIES}
         ${EXE_LINK_LIBS_POST}
 )
 
 IF(PERIMETER_WINDOWS)
-    SET(perimeter_LINK_LIBS ${perimeter_LINK_LIBS} ${SDL2MAIN_LIBRARY})
+    SET(perimeter_LINK_LIBS ${perimeter_LINK_LIBS} ${PERIMETER_SDL_MAIN_LIBRARY})
 ENDIF()
 
 IF(APPLE)

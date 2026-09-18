@@ -14,123 +14,193 @@ constexpr uint32_t TRANSPORT_RECV_SLEEP = 10;
 
 ///////// NetAddress //////////////
 
+NetAddress::NetAddress() = default;
+
 #ifndef EMSCRIPTEN
-NetAddress::NetAddress(uint32_t host, uint16_t port): addr() {
-    addr.host = host;
-    SDLNet_Write16(port, &addr.port);
-}
 
-NetAddress::NetAddress(): NetAddress(INADDR_NONE, 0) {}
+const static char* NET_ADDRESS_UDP_PING_DATA = "HostPing";
+const static char* NET_ADDRESS_UDP_PONG_DATA = "HostPong";
 
-TCPsocket NetAddress::openTCP() const {
-    TCPsocket socket = SDLNet_TCP_Open(const_cast<IPaddress*>(&addr));
-    if (socket == nullptr) {
-        fprintf(stderr, "NetAddress::openTCP failed address %s error %s\n", getString().c_str(), SDLNet_GetError());
+TCPsocket NetAddress::openTCP(int32_t timeout) const {
+    if (addr4 == INADDR_NONE) {
+        fprintf(stderr, "NetAddress::openTCP ip4 address is NONE\n");
+        return nullptr;
     }
-    return socket;
+    IPaddress ipaddr;
+    ipaddr.host = addr4;
+    SDLNet_Write16(port, &ipaddr.port);
+
+    //Ping over UDP with reduced timeout in case host is down so that TCP open won't stay waiting all day
+    if (0 < timeout) {
+        UDPsocket udp_socket = SDLNet_UDP_Open(0);
+        if (udp_socket == nullptr) {
+            fprintf(stderr, "NetAddress::openTCP failed to open UDP address %s error %s\n", getString().c_str(), SDLNet_GetError());
+            return nullptr;
+        }
+        
+        const static size_t UPD_PACKET_DATA_LEN = 32;
+        size_t ping_str_len = strlen(NET_ADDRESS_UDP_PING_DATA);
+        size_t pong_str_len = strlen(NET_ADDRESS_UDP_PONG_DATA);
+        uint8_t upd_packet_data[UPD_PACKET_DATA_LEN] = {};
+        int32_t start_time = clocki();
+        while (true) {
+            if (start_time + timeout < clocki()) {
+                fprintf(stderr, "NetAddress::openTCP timeout waiting for UDP ping response address %s error %s\n",
+                        getString().c_str(), SDLNet_GetError());
+                return nullptr;
+            }
+            memcpy(reinterpret_cast<char*>(upd_packet_data), NET_ADDRESS_UDP_PING_DATA, ping_str_len);
+            UDPpacket udp_packet;
+            udp_packet.channel = -1;
+            udp_packet.data = upd_packet_data;
+            udp_packet.len = static_cast<int>(ping_str_len);
+            udp_packet.maxlen = UPD_PACKET_DATA_LEN - 1;
+            udp_packet.status = 0;
+            udp_packet.address = ipaddr;
+            int status = SDLNet_UDP_Send(udp_socket, -1, &udp_packet);
+            if (status != 1) {
+                fprintf(stderr, "NetAddress::openTCP failed to send UDP ping %d address %s error %s\n",
+                        status, getString().c_str(), SDLNet_GetError());
+                return nullptr;
+            }
+
+            Sleep(50);
+
+            status = SDLNet_UDP_Recv(udp_socket, &udp_packet);
+            if (status == 1) {
+                if (udp_packet.len != pong_str_len) {
+                    fprintf(stderr, "NetAddress::openTCP failed UDP pong len %" PRIi32 " address %s error %s\n",
+                            udp_packet.len, getString().c_str(), SDLNet_GetError());
+                    return nullptr;
+                }
+                if (memcmp(udp_packet.data, NET_ADDRESS_UDP_PONG_DATA, pong_str_len) != 0) {
+                    fprintf(stderr, "NetAddress::openTCP failed UDP pong data mismatch address %s error %s\n",
+                            getString().c_str(), SDLNet_GetError());
+                    return nullptr;
+                }
+                break;
+            } else if (status != 0) {
+                //Keep trying until timeout
+                fprintf(stderr, "NetAddress::openTCP failed to recv UDP ping %d address %s error %s\n",
+                        status, getString().c_str(), SDLNet_GetError());
+            }
+        }
+    }
+
+    //Do TCP connection
+    TCPsocket tcp_socket = SDLNet_TCP_Open(&ipaddr);
+    if (tcp_socket == nullptr) {
+        fprintf(stderr, "NetAddress::openTCP failed to open TCP address %s error %s\n", getString().c_str(), SDLNet_GetError());
+    }
+    return tcp_socket;
 }
-#else
-NetAddress::NetAddress() {}
 #endif
 
 NetAddress::~NetAddress() = default;
 
 bool NetAddress::resolve(NetAddress& address, const std::string& host, uint16_t default_port) {
-#ifndef EMSCRIPTEN
-    std::string ip;
+    std::string host_tmp;
     uint16_t port;
     if (default_port == 0) {
         default_port = PERIMETER_IP_PORT_DEFAULT;
     }
     size_t pos = host.find(':');
     if (pos == std::string::npos) {
-        ip = host;
+        host_tmp = host;
         port = default_port;
     } else {
-        ip = host.substr(0, pos);
+        host_tmp = host.substr(0, pos);
         std::string port_str = host.substr(pos + 1);
         char* end;
         port = static_cast<uint16_t>(strtol(port_str.c_str(), &end, 10));
         if (!port) port = default_port;
     }
-    int32_t ret = SDLNet_ResolveHost(&address.addr, ip.c_str(), port) == 0;
-    if (ret < 0 || address.addr.host == INADDR_NONE) {
+
+#ifdef EMSCRIPTEN
+    address.host = host_tmp;
+    address.port = port;
+#else
+    IPaddress ipaddr;
+    int32_t ret = SDLNet_ResolveHost(&ipaddr, host_tmp.c_str(), port) == 0;
+    if (ret < 0 || ipaddr.host == INADDR_NONE) {
         fprintf(stderr, "Error resolving host %s: %s\n", host.c_str(), SDLNet_GetError());
         return false;
     }
-    return true;
-#else
-    address.address = host + ":" + std::to_string(NET_RELAY_DEFAULT_PORT);
-    return true;
+    address.host = host_tmp;
+    address.addr4 = ipaddr.host;
+    address.port = SDLNet_Read16(&ipaddr.port);
 #endif
+    return true;
 }
 
-uint16_t NetAddress::port() const {
-#ifndef EMSCRIPTEN
-    return SDLNet_Read16(&addr.port);
-#else
-    return NET_RELAY_DEFAULT_PORT;
-#endif
+uint16_t NetAddress::get_port() const {
+    return port;
 }
 
 NetAddress& NetAddress::operator=(const NetAddress& other) {
+    this->host = other.host;
+    this->port = other.port;
 #ifndef EMSCRIPTEN
-    this->addr.host = other.addr.host;
-    this->addr.port = other.addr.port;
-#else
-    this->address = other.address;
+    this->addr4 = other.addr4;
 #endif
     return *this;
 }
 
 bool NetAddress::operator==(const NetAddress& other) const {
-#ifndef EMSCRIPTEN
-    return this->addr.host == other.addr.host
-           && this->addr.port == other.addr.port;
-#else
-    return this->address == other.address;
-#endif
+    return this->host == other.host
+        && this->port == other.port;
 }
 
 void NetAddress::reset() {
+    host = "";
+    port = 0;
 #ifndef EMSCRIPTEN
-    addr.host = 0;
-    addr.port = 0;
-#else
-    address = "";
+    addr4 = INADDR_NONE;
 #endif
+}
+
+std::string NetAddress::getAddress() const {
+    std::string address;
+
+    if (!host.empty()) {
+        address += host;
+
+        if (port) {
+            address += ":" + std::to_string(port);
+        }
+    } else {
+        address = "none";
+    }
+
+    return address;
 }
 
 std::string NetAddress::getString() const {
+    std::string address = getAddress();
+
 #ifndef EMSCRIPTEN
-    std::string text;
-
-    if (addr.host != INADDR_NONE) {
-        for (size_t i = 0; i < 4; ++i) {
-            if (i > 0) text += ".";
-            uint8_t v = (addr.host >> (8 * i)) & 0xff;
-            text += std::to_string(v);
+    if (!address.empty()) {
+        if (addr4 != INADDR_NONE) {
+            address += " (";
+            for (size_t i = 0; i < 4; ++i) {
+                if (i > 0) address += ".";
+                uint8_t v = (addr4 >> (8 * i)) & 0xff;
+                address += std::to_string(v);
+            }
+            address += ")";
         }
-
-        if (addr.port) {
-            text += ":" + std::to_string(port());
-        }
-    } else {
-        text = "none";
     }
-
-    return text;
-#else
-    return address;
 #endif
+
+    return address;
 }
 
 ///////// NetTransport //////////////
-NetTransport* NetTransport::create(const NetAddress& address) {
+NetTransport* NetTransport::create(const NetAddress& address, int32_t timeout) {
 #ifdef EMSCRIPTEN
     int32_t handle = EM_ASM_INT((
         return Module.transportCreate($0);
-    ), address.getString().c_str());
+    ), address.getAddress().c_str());
 
     if (handle == -1) {
         return nullptr;
@@ -138,13 +208,14 @@ NetTransport* NetTransport::create(const NetAddress& address) {
 
     return new NetTransportWS(handle);
 #else
-    TCPsocket socket = address.openTCP();
-    if (socket) {
-        return new NetTransportTCP(socket);
-    }
-#endif
+    TCPsocket socket = address.openTCP(timeout);
 
-    return nullptr;
+    if (!socket) {
+        return nullptr;
+    }
+    
+    return new NetTransportTCP(socket);
+#endif
 }
 
 int32_t NetTransport::send(const void* buffer, uint32_t len, int32_t timeout) {

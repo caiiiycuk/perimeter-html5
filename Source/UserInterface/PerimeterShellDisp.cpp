@@ -103,20 +103,46 @@ _handlertbl[] = {
     {SQSH_MM_CONTENT_CHOOSER_SELECT_BTN, onMMContentChooserSelectButton},
     {SQSH_MM_BACK_FROM_CONTENT_CHOOSER_BTN, onMMBackButton},
 
-    //addons menu
-    {SQSH_MM_ADDONS_LIST, onMMAddonsList},
-    {SQSH_MM_ADDONS_APPLY_BTN, onMMAddonsApplyButton},
-    {SQSH_MM_ADDONS_ENABLE_COMBO, onMMAddonsEnableCombo},
-    {SQSH_MM_ADDONS_GUIDE_BTN, onMMOpenLinkButton},
-    {SQSH_MM_BACK_FROM_ADDONS_BTN, onMMAddonsBackButton},
+    //mods menu
+    {SQSH_MM_MOD_MENU_BTN, onMMModMenuButton},
+    {SQSH_MM_MOD_LIST_BTN, onMMModListButton},
+    {SQSH_MM_MOD_PUBLISH_BTN, onMMModPublishButton},
+    {SQSH_MM_MOD_GUIDE_BTN, onMMOpenLinkButton},
+    {SQSH_MM_BACK_FROM_MOD_MENU_BTN, onMMBackButton},
+
+    //mods list
+    {SQSH_MM_MOD_LIST_LIST, onMMModListList},
+    {SQSH_MM_MOD_LIST_APPLY_BTN, onMMModListApplyButton},
+    {SQSH_MM_MOD_LIST_ENABLE_COMBO, onMMModListEnableCombo},
+    {SQSH_MM_BACK_FROM_MOD_LIST_BTN, onMMModListBackButton},
+    
+    //mods publish
+    {SQSH_MM_MOD_PUBLISH_LIST, onMMModListList},
+    {SQSH_MM_MOD_PUBLISH_PUBLISH_BTN, onMMModPublishPublishButton},
+    {SQSH_MM_BACK_FROM_MOD_PUBLISH_BTN, onMMBackButton},
     
     //community menu
     {SQSH_MM_COMMUNITY_1_BTN, onMMOpenLinkButton},
     {SQSH_MM_COMMUNITY_2_BTN, onMMOpenLinkButton},
     {SQSH_MM_COMMUNITY_3_BTN, onMMOpenLinkButton},
     {SQSH_MM_COMMUNITY_4_BTN, onMMOpenLinkButton},
-    {SQSH_MM_ADDONS_BTN, onMMAddonsButton},
     {SQSH_MM_BACK_FROM_COMMUNITY_BTN, onMMBackButton},
+
+    //main menu control editor
+    {SQSH_MM_CONTROL_EDITOR_BTN, onMMControlEditorButton},
+    {SQSH_MM_CONTROL_EDITOR_LIST, onMMControlEditorList},
+    {SQSH_MM_CONTROL_EDITOR_CHANGE_BTN, onMMControlEditorChange},
+    {SQSH_MM_CONTROL_EDITOR_RESTORE_BTN, onMMControlEditorRestore},
+    {SQSH_MM_CONTROL_EDITOR_DELETE_BTN, onMMControlEditorDelete},
+    {SQSH_MM_BACK_FROM_CONTROL_EDITOR_BTN, onMMBackButton},
+
+    //ingame menu control editor
+    {SQSH_MM_CONTROL_EDITOR_INGAME_BTN, onMMControlEditorButton},
+    {SQSH_MM_CONTROL_EDITOR_INGAME_LIST, onMMControlEditorList},
+    {SQSH_MM_CONTROL_EDITOR_INGAME_CHANGE_BTN, onMMControlEditorChange},
+    {SQSH_MM_CONTROL_EDITOR_INGAME_RESTORE_BTN, onMMControlEditorRestore},
+    {SQSH_MM_CONTROL_EDITOR_INGAME_DELETE_BTN, onMMControlEditorDelete},
+    {SQSH_MM_BACK_FROM_CONTROL_EDITOR_INGAME_BTN, onMMBackButton},
 
 	//profile editor
 	{SQSH_MM_NEW_PROFILE_BTN, onMMNewProfileButton},
@@ -168,7 +194,6 @@ _handlertbl[] = {
 	{SQSH_MM_MAP_LIST, onMMMapList},
 
 	//credits
-    {SQSH_MM_CREDITS_COMMUNITY_BTN, onMMCommunityButton},
 	{SQSH_MM_BACK_CREDITS_BTN, onMMBackButton},
     
 
@@ -1047,7 +1072,9 @@ void CShellIconManager::fillTaskWnd() {
 	std::string taskTxt = gameShell->CurrentMission.missionDescription();
 
     if (gameShell->currentSingleProfile.getLastGameType() == UserSingleProfile::SCENARIO) {
-        std::string name = qdTextDB::instance().getText(historyScene.getMissionToExecute().name.c_str());
+        std::string name;
+        const char* name_str = qdTextDB::instance().getText(historyScene.getMissionToExecute().name.c_str());
+        if (name_str) name = name_str;
         if (!name.empty()) {
             if (taskTxt.empty()) {
                 taskTxt = name;
@@ -3902,20 +3929,6 @@ bool CtrlAction::actionPerformed() {
         }
     }
 	return false;
-}
-
-void HotKeyManager::keyPressed(int key) {
-	float currTime = frame_time();
-	for (int i = 0, s = hotKeys.size(); i < s; i++) {
-		if ( checkHotKey(hotKeys[i], key, currTime) ) {
-			if (actions[ hotKeys[i].actionNumber ]->actionPerformed()) {
-				gameShell->updatePosition();
-				break;
-			}
-		}
-	}
-	lastKey = key;
-	lastKeyTime = currTime;
 }
 
 void LogicUpdater::updateIconsData() {

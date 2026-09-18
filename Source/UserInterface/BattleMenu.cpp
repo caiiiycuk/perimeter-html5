@@ -12,6 +12,7 @@
 #include "Controls.h"
 #include "../Sound/PerimeterSound.h"
 #include "GraphicsOptions.h"
+#include "integrations.h"
 
 #include "Silicon.h"
 #include "HistoryScene.h"
@@ -28,7 +29,6 @@ extern MissionDescription missionToExec;
 extern BGScene bgScene;
 
 std::vector<MissionDescription> battleMaps;
-int defaultBattleMapCount = 0;
 MonoSelect battleColors;
 bool flagNeedRefresh = false;
 
@@ -297,6 +297,7 @@ void onBattleMenuOpening() {
         setupBattleDescWnd(0, battleMaps, SQSH_MM_BATTLE_MAP, SQSH_MM_BATTLE_MAP_DESCR_TXT);
     }
 
+    integrations::set_rich_presence(RichPresenceActivityBattle);
     flagNeedRefresh = true;
 }
 
@@ -385,13 +386,14 @@ void onMMBattleFrmButton(CShellWindow* pWnd, InterfaceEventCode code, int param)
 }
 
 void onMMBattleClrButton(CShellWindow* pWnd, InterfaceEventCode code, int param) {
+    int i = UI_PLAYERS_MAX * battlePlayersPage + (pWnd->ID - SQSH_MM_BATTLE_PLAYER1_CLR_BTN);
 	CColorComboWindow *pCombo = (CColorComboWindow*) pWnd;
 	if( code == EVENT_CREATEWND ) {
-		pCombo->pos = 3 - (SQSH_MM_BATTLE_PLAYER4_CLR_BTN - pWnd->ID);
+		pCombo->pos = i; //0 to 3
 	} else if ( code == EVENT_UNPRESSED && intfCanHandleInput() ) {
-		pCombo->pos = battleColors.putNext(3 - (SQSH_MM_BATTLE_PLAYER4_CLR_BTN - pWnd->ID));
+		pCombo->pos = battleColors.putNext(i);
 	} else if ( code == EVENT_RUNPRESSED && intfCanHandleInput() ) {
-		pCombo->pos = battleColors.putPrevious(3 - (SQSH_MM_BATTLE_PLAYER4_CLR_BTN - pWnd->ID));
+		pCombo->pos = battleColors.putPrevious(i);
 	}
 }
 

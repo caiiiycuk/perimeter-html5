@@ -27,6 +27,9 @@
 #include "codepages/codepages.h"
 #include "MainMenu.h"
 
+#include "integrations.h"
+#include "ServerList.h"
+
 extern char _bCursorVisible;
 extern char _bMenuMode;
 
@@ -55,7 +58,12 @@ bool intfCanHandleInput() {
         && _shellIconManager.isDynQueueEmpty();
 }
 
-std::string getOriginalMissionName(const std::string& originalSaveName) {
+std::string getOriginalMissionName(const MissionDescription* mission) {
+    const char* originalSaveName = mission->originalSaveName;
+    xassert(originalSaveName);
+    if (originalSaveName == nullptr || strlen(originalSaveName) == 0) {
+        return mission->missionName();
+    }
 	std::string res = convert_path_native(originalSaveName);
 	res.erase(res.size() - 4, res.size()); 
 	size_t pos = res.rfind(PATH_SEP);
@@ -135,14 +143,7 @@ void processInterfaceMessage(terUniverseInterfaceMessage id, int wndIDToHide = -
             CTextWindow *Wnd = (CTextWindow*)_shellIconManager.GetWnd( SQSH_MM_RESULT_TXT );
             CScaleResultButton *rWnd = (CScaleResultButton*)_shellIconManager.GetWnd( SQSH_RESULT_WND );
             if (gameShell->currentSingleProfile.getLastGameType() == UserSingleProfile::SURVIVAL) {
-                const char* origName = gameShell->CurrentMission.originalSaveName;
-                xassert(origName);
-                std::string keyName;
-                if (!origName) {
-                    keyName = gameShell->CurrentMission.missionName();
-                } else {
-                    keyName = getOriginalMissionName(origName);
-                }
+                std::string keyName = getOriginalMissionName(&gameShell->CurrentMission);
                 bool record = gameShell->currentSingleProfile.getRecord(keyName) < gameShell->gameTimer();
                 if (record) {
                     gameShell->currentSingleProfile.setRecord(keyName, gameShell->gameTimer());
@@ -183,14 +184,7 @@ void processInterfaceMessage(terUniverseInterfaceMessage id, int wndIDToHide = -
             CTextWindow *Wnd = (CTextWindow*)_shellIconManager.GetWnd( SQSH_MM_RESULT_TXT );
             CScaleResultButton *rWnd = (CScaleResultButton*)_shellIconManager.GetWnd( SQSH_RESULT_WND );
             if (gameShell->currentSingleProfile.getLastGameType() == UserSingleProfile::SURVIVAL) {
-                const char* origName = gameShell->CurrentMission.originalSaveName;
-                xassert(origName);
-                std::string keyName;
-                if (!origName) {
-                    keyName = gameShell->CurrentMission.missionName();
-                } else {
-                    keyName = getOriginalMissionName(origName);
-                }
+                std::string keyName = getOriginalMissionName(&gameShell->CurrentMission);
                 bool record = gameShell->currentSingleProfile.getRecord(keyName) < gameShell->gameTimer();
                 if (record) {
                     gameShell->currentSingleProfile.setRecord(keyName, gameShell->gameTimer());
@@ -924,6 +918,7 @@ int SwitchMenuScreenQuant1( float, float ) {
 			}
 			switch (_id_on) {
 				case SQSH_MM_START_SCR:
+                    integrations::set_rich_presence(RichPresenceActivityMenu);
                     gameShell->destroyNetClient();
                     //Remove last game type Multiplayer if set
                     if (gameShell->currentSingleProfile.getLastGameType() == UserSingleProfile::MULTIPLAYER) {
@@ -934,6 +929,7 @@ int SwitchMenuScreenQuant1( float, float ) {
                     historyScene.done();
 					break;
 				case SQSH_MM_SINGLE_SCR:
+                    integrations::set_rich_presence(RichPresenceActivityMenu);
                     historyScene.stop();
                     StartSpace();
                     historyScene.done();
@@ -941,13 +937,23 @@ int SwitchMenuScreenQuant1( float, float ) {
                 case SQSH_MM_CONTENT_CHOOSER_SCR:
                     fillContentChooserList();
                     break;
-                case SQSH_MM_ADDONS_SCR:
-                    loadAddonsList();
+                case SQSH_MM_MOD_LIST_SCR:
+                case SQSH_MM_MOD_PUBLISH_SCR:
+                    loadModList(_id_on);
                     break;
 				case SQSH_MM_PROFILE_SCR:
 					{
 						fillProfileList();
 						CEditWindow* input = (CEditWindow*)_shellIconManager.GetWnd(SQSH_MM_PROFILE_NAME_INPUT);
+                        if (input->isEmptyText() && integrations::get_store()) {
+                            std::string store_name = integrations::get_store()->get_player_name();
+                            //We abort on any unknown character since profile names are more delicate due to
+                            //how is used by the game so is better to just use default player name "Legate"
+                            store_name = convertToCodepage(store_name.c_str(), getLocale(), 0, true);
+                            if (!store_name.empty()) {
+                                input->SetText(store_name.c_str());
+                            }
+                        }
 						if (input->isEmptyText()) {
 							input->SetText(qdTextDB::instance().getText("Interface.Menu.EmptyName.NewPlayer"));
 						}
@@ -970,6 +976,7 @@ int SwitchMenuScreenQuant1( float, float ) {
 						historyScene.init(terVisGeneric, false, HISTORY_ADD_BLEND_ALPHA_MODE);
 						historyScene.playMusic();
 						bwScene.done();
+						integrations::set_rich_presence(RichPresenceActivityCampaign);
 
 //						_shellCursorManager.SetActiveCursor(CShellCursorManager::arrow, 1);	
 					}
@@ -1006,6 +1013,7 @@ int SwitchMenuScreenQuant1( float, float ) {
 						historyScene.stop();
 						StartSpace();
 						historyScene.done();
+						integrations::set_rich_presence(RichPresenceActivityCampaign);
 					}
 					break;
 				case SQSH_MM_BATTLE_SCR:
@@ -1072,24 +1080,46 @@ int SwitchMenuScreenQuant1( float, float ) {
 
 						CTextWindow* txtWnd = (CTextWindow*)_shellIconManager.GetWnd(SQSH_MM_MISSION_DESCR_TXT);
 
-                        switch (missionToExec.gameType_) {
-                            case GT_MULTI_PLAYER_RESTORE_PARTIAL:
-                            case GT_MULTI_PLAYER_RESTORE_FULL:
-                                txtWnd->setText( qdTextDB::instance().getText("Interface.Menu.Messages.Multiplayer.Nonsinchronization") );
-                                break;
-                            default:
-                                switch(gameShell->currentSingleProfile.getLastGameType()) {
-                                    case UserSingleProfile::BATTLE:
-                                    case UserSingleProfile::MULTIPLAYER:
-                                        txtWnd->setText( qdTextDB::instance().getText("Interface.Menu.Messages.Battle") );
-                                        break;
-                                    case UserSingleProfile::SURVIVAL:
-                                        txtWnd->setText( qdTextDB::instance().getText("Interface.Menu.Messages.Survival") );
-                                        break;
-                                    default:
-                                        txtWnd->SetText(missionToExec.missionDescription().c_str());
+                        if (missionToExec.gameType_ == GT_MULTI_PLAYER_RESTORE_PARTIAL
+                         || missionToExec.gameType_ == GT_MULTI_PLAYER_RESTORE_FULL) {
+                            txtWnd->setText( qdTextDB::instance().getText("Interface.Menu.Messages.Multiplayer.Nonsinchronization") );
+                        } else {
+                            std::string integration_text_extra = missionToExec.worldName();
+                            if (integration_text_extra.empty()) integration_text_extra = missionToExec.missionName();
+                            integration_text_extra = convertToUnicode(integration_text_extra, getLocale());
+                            
+                            switch(gameShell->currentSingleProfile.getLastGameType()) {
+                                case UserSingleProfile::BATTLE:
+                                    txtWnd->setText( qdTextDB::instance().getText("Interface.Menu.Messages.Battle") );
+                                    integrations::set_rich_presence(
+                                        RichPresenceActivityBattle,
+                                        integration_text_extra.c_str()
+                                    );
+                                    break;
+                                case UserSingleProfile::MULTIPLAYER: {
+                                    txtWnd->setText( qdTextDB::instance().getText("Interface.Menu.Messages.Battle") );
+                                    PNetCenter* pnc = gameShell->getNetClient();
+                                    if (pnc) pnc->updateIntegrationRichPresence();
+                                    break;
                                 }
-                                break;
+                                case UserSingleProfile::SURVIVAL:
+                                    txtWnd->setText( qdTextDB::instance().getText("Interface.Menu.Messages.Survival") );
+                                    integrations::set_rich_presence(
+                                        RichPresenceActivityBattle,
+                                        integration_text_extra.c_str()
+                                    );
+                                    break;
+                                case UserSingleProfile::SCENARIO:
+                                    txtWnd->SetText(missionToExec.missionDescription().c_str());
+                                    integrations::set_rich_presence(
+                                        RichPresenceActivityCampaign,
+                                        integration_text_extra.c_str()
+                                    );
+                                    break;
+                                default:
+                                    txtWnd->SetText(missionToExec.missionDescription().c_str());
+                                    break;
+                            }
                         }
 
 						
@@ -1138,6 +1168,10 @@ int SwitchMenuScreenQuant1( float, float ) {
                         }
                         _shellIconManager.GetWnd(SQSH_MM_MULTIPLAYER_LIST_JOIN_BTN)->Enable(0);
                         std::string name = getStringSettings(regLanName);
+                        if (name.empty() && integrations::get_store()) {
+                            std::string store_name = integrations::get_store()->get_player_name();
+                            name = convertToCodepage(store_name.c_str(), getLocale(), '?');
+                        }
                         if (name.empty() && gameShell->currentSingleProfile.isValidProfile()) {
                             name = gameShell->currentSingleProfile.getCurrentProfile()->name;
                         }
@@ -1149,6 +1183,8 @@ int SwitchMenuScreenQuant1( float, float ) {
                         }
 
                         gameShell->prepareNetClient();
+                        PNetCenter* pnc = gameShell->getNetClient();
+                        if (pnc) pnc->updateIntegrationRichPresence();
                         
                         historyScene.stop();
                         StartSpace();
@@ -1194,6 +1230,7 @@ int SwitchMenuScreenQuant1( float, float ) {
                         //Ensure saves are updated before listing
                         multiplayerSaves.clear();
                         fillMultiplayerHostList();
+						integrations::set_rich_presence(RichPresenceActivityMultiplayerWaiting);
                     }
                     break;
 				case SQSH_MM_MULTIPLAYER_JOIN_SCR:
@@ -1438,7 +1475,7 @@ void CShellIconManager::SwitchMenuScreens(int id_off, int id_on) {
             //These are just in case
             case SQSH_MM_BATTLE_SCR:
             case SQSH_MM_MULTIPLAYER_LIST_SCR:
-            case SQSH_MM_ADDONS_SCR:
+            case SQSH_MM_MOD_LIST_SCR:
                 initial_menu = "START";
                 break;
             //Required if user clicks on Community from Credits menu
@@ -1651,14 +1688,19 @@ void goToPreviousScreen(CShellWindow* pWnd, int current_screen_id) {
         case SQSH_MM_MULTIPLAYER_LIST_SCR:
         case SQSH_MM_COMMUNITY_SCR:
         case SQSH_MM_OPTIONS_SCR:
-        case SQSH_MM_CREDITS_SCR:
+        case SQSH_MM_MOD_MENU_SCR:
             nShow = SQSH_MM_START_SCR;
             break;
-        case SQSH_MM_ADDONS_SCR:
+        case SQSH_MM_MOD_LIST_SCR:
+        case SQSH_MM_MOD_PUBLISH_SCR:
+            nShow = SQSH_MM_MOD_MENU_SCR;
+            break;
+        case SQSH_MM_CREDITS_SCR:
             nShow = SQSH_MM_COMMUNITY_SCR;
             break;
         case SQSH_MM_GAME_SCR:
         case SQSH_MM_SOUND_SCR:
+        case SQSH_MM_CONTROL_EDITOR_SCR:
             nShow = SQSH_MM_OPTIONS_SCR;
             break;
         case SQSH_MM_GRAPHICS_SCR:
@@ -1706,6 +1748,7 @@ void goToPreviousScreen(CShellWindow* pWnd, int current_screen_id) {
             break;
         case SQSH_MM_SCREEN_GAME:
         case SQSH_MM_SCREEN_SOUND:
+        case SQSH_MM_CONTROL_EDITOR_INGAME_SCR:
             nShow = SQSH_MM_SCREEN_OPTIONS;
             break;
         case SQSH_MM_INGAME_CUSTOM_SCR:

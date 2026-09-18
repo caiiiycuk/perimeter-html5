@@ -29,6 +29,7 @@
 std::vector<std::vector<SDL_Scancode>> vk_to_scancodes = {};
 
 int16_t GetVKFromScanCode(SDL_Scancode scancode) {
+    //fprintf(stderr, "%s: scancode %" PRIu32 "\n", __func__, scancode);
     switch (scancode) {
         default:
         case SDL_SCANCODE_UNKNOWN:           break;
@@ -236,13 +237,13 @@ int16_t GetVKFromScanCode(SDL_Scancode scancode) {
         case SDL_SCANCODE_KP_OCTAL:
         case SDL_SCANCODE_KP_DECIMAL:
         case SDL_SCANCODE_KP_HEXADECIMAL:    return 0;
-        case SDL_SCANCODE_LCTRL:             return VK_CONTROL;
-        case SDL_SCANCODE_LSHIFT:            return VK_SHIFT;
-        case SDL_SCANCODE_LALT:              return VK_ALT;
+        case SDL_SCANCODE_LCTRL:             return VK_LCONTROL;
+        case SDL_SCANCODE_LSHIFT:            return VK_LSHIFT;
+        case SDL_SCANCODE_LALT:              return VK_LALT;
         case SDL_SCANCODE_LGUI:              return 0;
-        case SDL_SCANCODE_RCTRL:             return VK_CONTROL;
-        case SDL_SCANCODE_RSHIFT:            return VK_SHIFT;
-        case SDL_SCANCODE_RALT:              return VK_ALT;
+        case SDL_SCANCODE_RCTRL:             return VK_RCONTROL;
+        case SDL_SCANCODE_RSHIFT:            return VK_RSHIFT;
+        case SDL_SCANCODE_RALT:              return VK_RALT;
         case SDL_SCANCODE_RGUI:
         case SDL_SCANCODE_MODE:
         case SDL_SCANCODE_AUDIONEXT:
@@ -280,14 +281,67 @@ int16_t GetVKFromScanCode(SDL_Scancode scancode) {
 
 void initKeyboardMapping() {
     vk_to_scancodes.clear();
-    for (int i = 0; i < 0xFF; ++i) {
+    for (int i = 0; i <= VK_MAX_CODE; ++i) {
         vk_to_scancodes.emplace_back();
+        switch (i) {
+            default:
+                break;
+            case VK_SHIFT:
+                vk_to_scancodes[i].emplace_back(SDL_SCANCODE_LSHIFT);
+                vk_to_scancodes[i].emplace_back(SDL_SCANCODE_RSHIFT);
+                break;
+            case VK_CONTROL:
+                vk_to_scancodes[i].emplace_back(SDL_SCANCODE_LCTRL);
+                vk_to_scancodes[i].emplace_back(SDL_SCANCODE_RCTRL);
+                break;
+            case VK_ALT:
+                vk_to_scancodes[i].emplace_back(SDL_SCANCODE_LALT);
+                vk_to_scancodes[i].emplace_back(SDL_SCANCODE_RALT);
+                break;
+        }
     }
     for (int i = 0; i < SDL_NUM_SCANCODES; ++i) {
         SDL_Scancode scancode = static_cast<SDL_Scancode>(i);
         int16_t vk = GetVKFromScanCode(scancode);
-        if (vk <= 0) continue;
+        if (vk <= VK_NONE) continue;
         vk_to_scancodes[vk].emplace_back(scancode);
+    }
+}
+
+SDL_Scancode getSDLScanCodeFromVK(uint32_t key) {
+    if (key >= vk_to_scancodes.size()) {
+        xassert(0);
+#ifdef PERIMETER_DEBUG
+        fprintf(stderr, "%s: VK key out of bounds requested %" PRIu32 "\n", __func__, key);
+#endif
+        return SDL_SCANCODE_UNKNOWN;
+    }
+    
+    const std::vector<SDL_Scancode>& scancodes = vk_to_scancodes[key];
+    if (scancodes.empty()) {
+        return SDL_SCANCODE_UNKNOWN;
+    }
+
+    SDL_Scancode scancode = scancodes[0];
+    return scancode;
+}
+
+uint32_t getModFlagFromKey(uint32_t key) {
+    switch (key) {
+        case VK_CONTROL:
+        case VK_LCONTROL:
+        case VK_RCONTROL:
+            return KBD_CTRL;
+        case VK_SHIFT:
+        case VK_LSHIFT:
+        case VK_RSHIFT:
+            return KBD_SHIFT;
+        case VK_ALT:
+        case VK_LALT:
+        case VK_RALT:
+            return KBD_ALT;
+        default:
+            return 0;
     }
 }
 
@@ -296,7 +350,7 @@ bool isPressed(uint32_t key) {
     if (key >= vk_to_scancodes.size()) {
         xassert(0);
 #ifdef PERIMETER_DEBUG
-        fprintf(stderr, "VK key out of bounds requested %" PRIu32 "\n", key);
+        fprintf(stderr, "%s: VK key out of bounds requested %" PRIu32 "\n", __func__, key);
 #endif
         return false;
     }
@@ -304,15 +358,33 @@ bool isPressed(uint32_t key) {
     //Handle special keys
     switch (key) {
         case VK_LBUTTON:
+            return SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_LMASK;
         case VK_MBUTTON:
+            return SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_MMASK;
         case VK_RBUTTON:
-            return SDL_GetMouseState(nullptr, nullptr) & key;
+            return SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_RMASK;
+        case VK_XBUTTON1:
+            return SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_X1MASK;
+        case VK_XBUTTON2:
+            return SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_X2MASK;
         case VK_SHIFT:
             return SDL_GetModState() & KMOD_SHIFT;
+        case VK_LSHIFT:
+            return SDL_GetModState() & KMOD_LSHIFT;
+        case VK_RSHIFT:
+            return SDL_GetModState() & KMOD_RSHIFT;
         case VK_CONTROL:
             return SDL_GetModState() & KMOD_CTRL;
+        case VK_LCONTROL:
+            return SDL_GetModState() & KMOD_LCTRL;
+        case VK_RCONTROL:
+            return SDL_GetModState() & KMOD_RCTRL;
         case VK_ALT:
             return SDL_GetModState() & KMOD_ALT;
+        case VK_LALT:
+            return SDL_GetModState() & KMOD_LALT;
+        case VK_RALT:
+            return SDL_GetModState() & KMOD_RALT;
         default:
             break;
     }
@@ -321,7 +393,7 @@ bool isPressed(uint32_t key) {
     const std::vector<SDL_Scancode>& scancodes = vk_to_scancodes[key];
     if (scancodes.empty()) {
 #ifdef PERIMETER_DEBUG
-        fprintf(stderr, "Unmmaped VK key requested %" PRIu32 "\n", key);
+        fprintf(stderr, "%s: Unmmaped VK key requested %" PRIu32 "\n", __func__, key);
 #endif
         return false;
     }
@@ -336,8 +408,8 @@ bool isPressed(uint32_t key) {
             xassert(0);
 #ifdef PERIMETER_DEBUG
             fprintf(stderr,
-                    "VK key %" PRIu32 " has a scancode out of bounds %" PRIu32 "\n",
-                    key, static_cast<uint32_t>(scancode));
+                    "%s: VK key %" PRIu32 " has a scancode out of bounds %" PRIu32 "\n",
+                    __func__, key, static_cast<uint32_t>(scancode));
 #endif
             continue;
         }
@@ -352,7 +424,7 @@ sKey::sKey(SDL_Keysym keysym) {
         key = 0;
 #ifdef PERIMETER_DEBUG
         if (vk < 0) {
-            fprintf(stderr, "Unknown SDL key requested scan %d sym %d\n", keysym.scancode, keysym.sym);
+            fprintf(stderr, "%s: Unknown SDL key requested scan %d sym %d\n", __func__, keysym.scancode, keysym.sym);
         }
 #endif
     } else {
@@ -380,32 +452,56 @@ sKey::sKey(SDL_Keysym keysym) {
         alt |= 1;
     }
 
-    // добавляем расширенные коды для командных кодов
-    if (key == VK_CONTROL) {
-        ctrl |= 1;
-    }
-    if (key == VK_SHIFT) {
-        shift |= 1;
-    }
-    if (key == VK_ALT) {
-        alt |= 1;
+    // Remove modifier status to self
+    switch (key) {
+        case VK_ALT:
+        case VK_LALT:
+        case VK_RALT:
+            alt = 0;
+            break;
+        case VK_SHIFT:
+        case VK_LSHIFT:
+        case VK_RSHIFT:
+            shift = 0;
+            break;
+        case VK_CONTROL:
+        case VK_LCONTROL:
+        case VK_RCONTROL:
+            ctrl = 0;
+            break;
+        default:
+            break;
     }
 }
 
-sKey::sKey(int key_) {
-    fullkey = key = key_;
-    ctrl = isControlPressed();
-    shift = isShiftPressed();
-    alt = isAltPressed();
-    // добавляем расширенные коды для командных кодов
-    if (key == VK_CONTROL) {
-        ctrl |= 1;
+sKey::sKey(uint32_t key_, bool set_mods_pressed) {
+    key = key_ & 0xFF;
+    fullkey = key_;
+    if (set_mods_pressed) {
+        ctrl = isControlPressed();
+        shift = isShiftPressed();
+        alt = isAltPressed();
     }
-    if (key == VK_SHIFT) {
-        shift |= 1;
-    }
-    if (key == VK_ALT) {
-        alt |= 1;
+
+    // Remove modifier status to self
+    switch (key) {
+        case VK_ALT:
+        case VK_LALT:
+        case VK_RALT:
+            alt = 0;
+            break;
+        case VK_SHIFT:
+        case VK_LSHIFT:
+        case VK_RSHIFT:
+            shift = 0;
+            break;
+        case VK_CONTROL:
+        case VK_LCONTROL:
+        case VK_RCONTROL:
+            ctrl = 0;
+            break;
+        default:
+            break;
     }
 }
 
@@ -473,7 +569,6 @@ bool create_directories(const std::string& path, std::error_code* error) {
 }
 
 // ---   Ini file   ---------------------
-//TODO move CSimpleIniA into IniManager so we avoid loading/saving file each time we read/write a key
 
 uint32_t ReadIniString(const char* section, const char* key, const char* defaultVal,
                        char* returnBuffer, uint32_t bufferSize, const std::string& filePath) {
@@ -538,6 +633,14 @@ IniManager::IniManager(const char* fname, bool check_existence_, bool full_path)
     is_full_path = full_path;
 }
 
+IniManager::~IniManager() {
+    CSimpleIniA* ini = static_cast<CSimpleIniA*>(ini_instance);
+    if (ini) {
+        save();
+        delete ini;
+    }
+}
+
 std::string IniManager::getFilePath() {
     if (!is_full_path) {
         std::string pathres = convert_path_content(fname_);
@@ -554,25 +657,89 @@ std::string IniManager::getFilePath() {
     }
 }
 
+bool IniManager::load() {
+    CSimpleIniA* ini = static_cast<CSimpleIniA*>(ini_instance);
+    if (!ini) {
+        pending_changes = false;
+        ini_instance = ini = new CSimpleIniA();
+    }
+    if (pending_changes) {
+        save();
+    }
+    
+    std::string path = getFilePath();
+    std::ifstream istream(std::filesystem::u8path(path), std::ios::in | std::ios::binary);
+    SI_Error rc = ini->LoadData(istream);
+    istream.close();
+    if (rc < 0) {
+        fprintf(stderr, "Error reading %s file: %d\n", path.c_str(), rc);
+        return false;
+    }
+    
+    return true;
+}
+
+bool IniManager::save() {
+    if (!pending_changes) {
+        return false;
+    }
+    pending_changes = false;
+    
+    std::string path = getFilePath();
+    CSimpleIniA* ini = static_cast<CSimpleIniA*>(ini_instance);
+    if (!ini) {
+        fprintf(stderr, "No ini loaded to write %s file\n", path.c_str());
+        return false;
+    }
+
+    std::ofstream ostream(std::filesystem::u8path(path), std::ios::out | std::ios::binary);
+    SI_Error rc = ini->Save(ostream);
+    ostream.close();
+    if (rc < 0) {
+        fprintf(stderr, "Error writing %s file: %d\n", path.c_str(), rc);
+        return false;
+    }
+    
+    return true;
+}
+
+
 const char* IniManager::get(const char* section, const char* key)
 {
-	static char buf[256];
-    std::string path = getFilePath();
+    static const size_t BUF_SIZE = 256;
+	static char buf[BUF_SIZE];
+    *buf = 0;
+
+    if (!ini_instance && !load()) {
+        return buf;
+    }
     
-	if(!ReadIniString(section, key, nullptr, buf, 256, path)){
-		*buf = 0;
-		if (check_existence) {
-            fprintf(stderr, "INI key not found %s %s %s\n", path.c_str(), section, key);
-        }
-	}
+    CSimpleIniA* ini = static_cast<CSimpleIniA*>(ini_instance);
+    const char* val = ini->GetValue(section, key, nullptr);
+    if (val) {
+        strncpy(buf, val, BUF_SIZE);
+    } else if (check_existence) {
+        std::string path = getFilePath();
+        fprintf(stderr, "INI key not found [%s] %s in file %s\n", section, key, path.c_str());
+    }
 
 	return buf;
 }
+
 void IniManager::put(const char* section, const char* key, const char* val)
 {
-    std::string path = getFilePath();
-    
-    WriteIniString(section, key, val, path);
+    if (!ini_instance && !load()) {
+        return;
+    }
+
+    CSimpleIniA* ini = static_cast<CSimpleIniA*>(ini_instance);
+    SI_Error rc = ini->SetValue(section, key, val);
+    if (rc < 0) {
+        std::string path = getFilePath();
+        fprintf(stderr, "Error writing [%s] %s = %s in file %s: %d\n", section, key, val, path.c_str(), rc);
+        return;
+    }
+    pending_changes = true;
 }
 
 int IniManager::getInt(const char* section, const char* key) 
@@ -629,7 +796,7 @@ void IniManager::getFloatArray(const char* section, const char* key, int size, f
 }
 void IniManager::putFloatArray(const char* section, const char* key, int size, const float array[])
 {
-	XBuffer buf(256, 1);
+	XBuffer buf(256, true);
 	for(int i = 0; i < size; i++)
 		buf <= array[i] < " ";
 	put(section, key, buf);
@@ -671,56 +838,62 @@ std::string setExtension(const std::string& file_name, const char* extension) {
     return str;
 }
 
+std::string getPrefFilePath(const std::string& file_name) {
+    std::string prefPath;
+    if (file_name.empty()) {
+        return prefPath;
+    }
+    const char* prefPath_ptr = GET_PREF_PATH();
+    if (prefPath_ptr) {
+        prefPath = prefPath_ptr;
+        SDL_free((void*) prefPath_ptr);
+    }
+    prefPath += file_name;
+    if (!std::filesystem::exists(std::filesystem::u8path(prefPath))) {
+        //Create file if it doesn't exist
+        XStream f;
+        if (f.open(prefPath,XS_OUT)) {
+            f.close();
+        } else {
+            //Failed to create in user dir, use game content
+            prefPath = file_name;
+            if (f.open(prefPath,XS_OUT)) {
+                f.close();
+            }
+        }
+    }
+    
+    return prefPath;
+}
+
 // --- Settings ------
 
 static IniManager* settingsManager;
 
 IniManager* getSettings() {
     if (!settingsManager) {
-        const char* prefPath_ptr = GET_PREF_PATH();
-        std::string prefPath;
-        if (prefPath_ptr) {
-            prefPath = prefPath_ptr;
-            SDL_free((void*) prefPath_ptr);
-        }
-        prefPath += "Settings.ini";
-        if (!std::filesystem::exists(std::filesystem::u8path(prefPath))) {
-            //Create file if doesn't exist
-            XStream f;
-            if (f.open(prefPath,XS_OUT)) {
-                f.close();
-            } else {
-                //Failed to create in user dir, use game content
-                prefPath = "Settings.ini";
-                if (f.open(prefPath,XS_OUT)) {
-                    f.close();
-                }
-            }
-        }
+        std::string prefPath = getPrefFilePath("Settings.ini");
         settingsManager = new IniManager(prefPath.c_str(), false, true);
     }
     return settingsManager;
 }
 
 std::string getStringSettings(const std::string& keyName, const std::string& defaultValue) {
-    std::string res;
-    bool found = false;
-
     IniManager* ini = getSettings();
     std::string key = terGameContentBase == GAME_CONTENT::CONTENT_NONE ? "Global" : getGameContentEnumName(terGameContentBase);
     const char* result = ini->get(key.c_str(), keyName.c_str());
     if (*result) {
-        found = true;
-        res = result;
+        return result;
+    } else {
+        return defaultValue;
     }
-    
-    return found ? res : defaultValue;
 }
 
 void putStringSettings(const std::string& keyName, const std::string& value) {
     IniManager* ini = getSettings();
     std::string key = terGameContentBase == GAME_CONTENT::CONTENT_NONE ? "Global" : getGameContentEnumName(terGameContentBase); 
     ini->put(key.c_str(), keyName.c_str(), value.c_str());
+    ini->save();
 }
 
 // --- Formatting ------

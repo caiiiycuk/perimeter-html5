@@ -364,6 +364,11 @@ Pete in his Jeep
 Тестирование,
 создание мода "True English Compaign"
 
+Александр "@!!ex" Басов
+Широкоэкранный патч
+Инструменты сообщества
+Реверс-инжиниринг игровых форматов данных
+
 &9966FFАссоциация KD-Lab&FFFFFF
 Менеджмент, маркетинг
 Юлия "Ylitka" Новикова
@@ -377,11 +382,7 @@ August
 ViHtor
 shikoist
 
-&9966FFСпециальные благодарности&FFFFFF
-Александр "@!!ex" Басов
-
-
-Сторонних библиотек
+&9966FFСторонних библиотек&FFFFFF
 SDL2
 SDL2_image
 SDL2_net
@@ -686,6 +687,11 @@ Pete in his Jeep
 Testing,
 "True English Campaign" mod creator
 
+Alexander "@!!ex" Basov
+Widescreen patch
+Community tools
+Reverse engineering of game file formats
+
 &9966FFKD-Lab Association&FFFFFF
 Management, marketing
 Yulia "Ylitka" Novikova
@@ -699,11 +705,7 @@ August
 ViHtor
 shikoist
 
-&9966FFSpecial Thanks&FFFFFF
-Alexander "@!!ex" Basov
-
-
-Third-party libraries
+&9966FFThird-party libraries&FFFFFF
 SDL2
 SDL2_image
 SDL2_net
@@ -768,160 +770,14 @@ void qdTextDB::load_supplementary_texts(const std::string& locale) {
     //Load per language texts
     if (startsWith(locale, "russian")) {
         load_lines({
-           "GAME_CONTENT.PERIMETER=Периметр",
-           "GAME_CONTENT.PERIMETER_ET=Периметр: Завет Императора",
-           "Interface.Menu.Mods.MetadataVersion=Версия:",
-           "Interface.Menu.Mods.MetadataAuthors=Авторы:",
-           "Interface.Menu.Mods.MetadataDescription=Описание:",
-           "Interface.Menu.Mods.MetadataSite=Сайт:",
-           "Interface.Menu.Mods.MetadataLicense=Лицензия",
-           "Interface.Menu.Mods.Errors=Ошибки:",
-           "Interface.Menu.Mods.ErrorMissingAttribute=Отсутствует атрибут в mod.ini:",
-           "Interface.Menu.Mods.ErrorGameTooOld=Игра слишком старая, нужна версия:",
-           "Interface.Menu.Mods.ErrorMissingModInfo=Отсутствует mod.ini",
-           "Interface.Menu.Mods.ErrorDuplicateContent=Содержимое уже загружено",
-           "Interface.Menu.Mods.ErrorRequiredContentMissing=Мод требует контента, который не установлен",
-           "Interface.Menu.Mods.ErrorRequiredContentDisabled=Мод требует отключенного контента",
-           "Interface.Menu.Mods.ErrorDisallowedContentEnabled=Мод несовместим с активным в данный момент контентом",
-           "Interface.Menu.Messages.ReplayGameVersionDifferent=Этот повтор был сохранен в другой версии и может отображаться неправильно. Использованная версия игры:",
-           "Interface.Menu.Messages.GameContentMissing=Содержит ресурсы, которые не представлены или не включены в этой копии игры, убедитесь, что они установлены и включены:\n",
-           "Interface.Menu.Messages.GameContentSwitch=Содержит неактивные ресурсы. Переключите кампанию на следующую:",
-           "Interface.Menu.Messages.WorldMissing=Содержит карту, которая не представлена или не включена в этой копии игры, убедитесь, что она установлена и включена:\n\n",
-           "Interface.Menu.ButtonLabels.MULTIPLAYER=МУЛЬТИПЛЕЕР",
-           "Interface.Menu.ButtonLabels.MODS=МОДЫ",
-           "Interface.Menu.ButtonLabels.COMMUNITY=КОМЬЮНИТИ",
-           "Interface.Menu.ButtonLabels.K-D LAB=К-Д ЛАБ",
-           "Interface.Menu.ButtonLabels.ASSOCIATION=АССОЦИАЦИЯ",
-           "Interface.Menu.ButtonLabels.SOCIAL MEDIA=СОЦИАЛЬНЫЕ СЕТИ",
-           "Interface.Menu.ButtonLabels.SOURCE CODE=ИСХОДНЫЙ КОД",
-           "Interface.Menu.ButtonLabels.MOD ENABLE STATE=мод состояние:",
-           "Interface.Menu.ButtonLabels.CHANGE_CONTENTS=СМЕНИТЬ\nКАМПАНИЮ",
-           "Interface.Menu.ButtonLabels.DIRECT=ВВОД IP",
-           "Interface.Menu.ButtonLabels.Password=Пароль:",
-           "Interface.Menu.ButtonLabels.Port=Порт:",
-           "Interface.Menu.ButtonLabels.SERVER TYPE=Тип сервера:",
-           "Interface.Menu.ButtonLabels.CANCEL=ОТМЕНА",
-           "Interface.Menu.ButtonLabels.RUN IN BACKGROUND=ЗАПУСТИТЬ ИГРУ НА ФОНЕ",
-           "Interface.Menu.ButtonLabels.START SPLASH=ОТОБРАЖАТЬ НАЧАЛЬНЫЕ РОЛИКИ",
-           "Interface.Menu.ButtonLabels.CAMERA MODE=РЕЖИМ КАМЕРЫ",
-           "Interface.Menu.ButtonLabels.UI POSITION=ПОЗИЦИОНИРОВАНИЕ UI",
-           "Interface.Menu.ButtonLabels.GRAB INPUT=ЗАХВАТ ВВОДА",
-           "Interface.Menu.ButtonLabels.FOG=ТУМАН",
-           "Interface.Menu.ButtonLabels.Network=Сеть",
-           "Interface.Menu.ButtonLabels.GUIDE=РУКОВОДСТВО",
-           "Interface.Menu.ButtonLabels.VSYNC=ВЕРТИКАЛЬНАЯ СИНХРОНИЗАЦИЯ",
-           "Interface.Menu.ButtonLabels.VOICE VOLUME=ГРОМКОСТЬ ГОЛОСА",
-           "Interface.Menu.ButtonLabels.SPEECH VOLUME=ГРОМКОСТЬ ГОЛОСА БРИФИНГОВ И ЗАДАНИЙ",
-           "Interface.Menu.ComboItems.Centered=По центру",
-           "Interface.Menu.ComboItems.Left side=Левая сторона",
-           "Interface.Menu.ComboItems.Right side=Правая сторона",
-           "Interface.Menu.ComboItems.Stretched=Растянутый",
-           "Interface.Menu.ComboItems.Screen=Экран",
-           "Interface.Menu.ComboItems.Windowed=Оконный",
-           "Interface.Menu.ComboItems.Private Server=Частный/Локальный сервер",
-           "Interface.Menu.ComboItems.Public Server=Публичный/Интернет сервер",
-           "Interface.Menu.ComboItems.No restrictions=Нет ограничений",
-           "Interface.Menu.ComboItems.Classic=Классический",
-           "Interface.Menu.Multiplayer.StartNewGame=Начать новую игру",
-           "Interface.Menu.Multiplayer.Server=сервер",
-           "Interface.Tips.Multiplayer.HasPassword=Имеет пароль",
-           "Interface.Tips.Multiplayer.GameStarted=Игра уже началась",
-           "Interface.Tips.Multiplayer.Game=Игра",
-           "Interface.Tips.Multiplayer.Map=Карта",
-           "Interface.Tips.Multiplayer.CurrentPlayers=Текущие игроки",
-           "Interface.Tips.Multiplayer.Ping=Пинг",
-           "Interface.Tips.PopupUnitDerived=\n&00FFFF\"Правая кнопка мыши\"&FFFFFF заказ базовых роботов\nдля одной единицы, с &00FFFF\"Shift\"&FFFFFF для пяти единиц.",
-           "Interface.Menu.Messages.WrongIPPort=Этот IP-адрес недоступен",
-           "Interface.Menu.Messages.Multiplayer.IncorrectContent=Сервер содержит другие игровые ресурсы",
-           "Interface.Menu.Messages.Multiplayer.IncorrectArch=Сервер имеет другую битность или архитектуру ЦПУ, другой тип билда (Debug/Release), операционную систему или использован другой компилятор (MSVC/Clang/GCC), пожалуйста, убедитесь, что они совпадают",
-           "Interface.Menu.Messages.Multiplayer.SignatureError=Проверка подписи или CRC не прошла, соединение может быть ненадёжным",
-           "Interface.Menu.Messages.Multiplayer.HostTerminated=Хост прекратил игру или отключился",
-           "Interface.Menu.Messages.Multiplayer.StartingGame=Игра начинается...",
-           "Interface.Menu.Messages.Multiplayer.ChatTip=Нажмите &00FFFF\"Insert\"&FFFFFF чтобы написать игрокам из своего клана, &00FFFF\"Control + Insert\"&FFFFFF или &00FFFF\"Control + Space\"&FFFFFF чтобы написать всем игрокам.",
-           "Interface.Menu.Messages.Multiplayer.Kicked=Вас кикнули.",
-           "Interface.Menu.Messages.Confirmations.PendingChanges=Отложенные изменения не будут применены, вернуться в главное меню?",
-           "Interface.Menu.Messages.Confirmations.ApplyChangesRestart=Чтобы применить изменения, требуется перезапуск игры, вы уверены?",
-           "Interface.Menu.Messages.Confirmations.OpenWeb=Открыть сайт?",
+#include "Texts_ru.h"
            //Empty to not mess with ,'s
            ""
        }, false, locale);
     } else {
         //Load english for rest until they are translated
         load_lines({
-           "GAME_CONTENT.PERIMETER=Perimeter",
-           "GAME_CONTENT.PERIMETER_ET=Perimeter: Emperor's Testament",
-           "Interface.Menu.Mods.MetadataVersion=Version:",
-           "Interface.Menu.Mods.MetadataAuthors=Authors:",
-           "Interface.Menu.Mods.MetadataDescription=Description:",
-           "Interface.Menu.Mods.MetadataSite=Site:",
-           "Interface.Menu.Mods.MetadataLicense=License",
-           "Interface.Menu.Mods.Errors=Errors:",
-           "Interface.Menu.Mods.ErrorMissingAttribute=Missing attribute in mod.ini:",
-           "Interface.Menu.Mods.ErrorGameTooOld=Game is too old, needs version:",
-           "Interface.Menu.Mods.ErrorMissingModInfo=Missing mod.ini",
-           "Interface.Menu.Mods.ErrorDuplicateContent=Content is already loaded",
-           "Interface.Menu.Mods.ErrorRequiredContentMissing=Mod requires content that is not installed",
-           "Interface.Menu.Mods.ErrorRequiredContentDisabled=Mod requires content that is disabled",
-           "Interface.Menu.Mods.ErrorDisallowedContentEnabled=Mod is not compatible with currently enabled content",
-           "Interface.Menu.Messages.ReplayGameVersionDifferent=This replay was saved with a different version and may not display correctly, used game version:",
-           "Interface.Menu.Messages.GameContentMissing=Contains game content that is not present or enabled in your installation, make sure these are installed and enabled in your game:\n",
-           "Interface.Menu.Messages.GameContentSwitch=Contains game content that is not selected, please change the campaign to the following content:\n",
-           "Interface.Menu.Messages.WorldMissing=This contains a map/world that is not present or enabled in your installation, make sure that is installed and enabled in your game:\n\n",
-           "Interface.Menu.ButtonLabels.MULTIPLAYER=MULTIPLAYER",
-           "Interface.Menu.ButtonLabels.MODS=MODS",
-           "Interface.Menu.ButtonLabels.COMMUNITY=COMMUNITY",
-           "Interface.Menu.ButtonLabels.K-D LAB=K-D LAB",
-           "Interface.Menu.ButtonLabels.ASSOCIATION=ASSOCIATION",
-           "Interface.Menu.ButtonLabels.SOCIAL MEDIA=SOCIAL MEDIA",
-           "Interface.Menu.ButtonLabels.SOURCE CODE=SOURCE CODE",
-           "Interface.Menu.ButtonLabels.MOD ENABLE STATE=Mod state:",
-           "Interface.Menu.ButtonLabels.CHANGE_CONTENTS=CHANGE\nCAMPAIGN",
-           "Interface.Menu.ButtonLabels.DIRECT=ENTER IP",
-           "Interface.Menu.ButtonLabels.Password=Password:",
-           "Interface.Menu.ButtonLabels.Port=Port:",
-           "Interface.Menu.ButtonLabels.SERVER TYPE=Server Type:",
-           "Interface.Menu.ButtonLabels.CANCEL=CANCEL",
-           "Interface.Menu.ButtonLabels.RUN IN BACKGROUND=RUN GAME IN BACKGROUND",
-           "Interface.Menu.ButtonLabels.START SPLASH=DISPLAY INTRO VIDEOS",
-           "Interface.Menu.ButtonLabels.CAMERA MODE=CAMERA MODE",
-           "Interface.Menu.ButtonLabels.UI POSITION=UI POSITIONING",
-           "Interface.Menu.ButtonLabels.GRAB INPUT=CAPTURE INPUT",
-           "Interface.Menu.ButtonLabels.FOG=FOG",
-           "Interface.Menu.ButtonLabels.Network=Network",
-           "Interface.Menu.ButtonLabels.GUIDE=GUIDE",
-           "Interface.Menu.ButtonLabels.VSYNC=VERTICAL SYNC",
-           "Interface.Menu.ButtonLabels.VOICE VOLUME=VOICE VOLUME",
-           "Interface.Menu.ButtonLabels.SPEECH VOLUME=VOICE VOLUME OF BRIEFINGS AND TASKS",
-           "Interface.Menu.ComboItems.Centered=Centered",
-           "Interface.Menu.ComboItems.Left side=Left side",
-           "Interface.Menu.ComboItems.Right side=Right side",
-           "Interface.Menu.ComboItems.Stretched=Stretched",
-           "Interface.Menu.ComboItems.Screen=Screen",
-           "Interface.Menu.ComboItems.Windowed=Windowed",
-           "Interface.Menu.ComboItems.Private Server=Private/Local Server",
-           "Interface.Menu.ComboItems.Public Server=Public/Online Server",
-           "Interface.Menu.ComboItems.No restrictions=No restrictions",
-           "Interface.Menu.ComboItems.Classic=Classic",
-           "Interface.Menu.Multiplayer.StartNewGame=Start a new game",
-           "Interface.Menu.Multiplayer.Server=Server",
-           "Interface.Tips.Multiplayer.HasPassword=Has password",
-           "Interface.Tips.Multiplayer.GameStarted=Game has already started",
-           "Interface.Tips.Multiplayer.Game=Game",
-           "Interface.Tips.Multiplayer.Map=Map",
-           "Interface.Tips.Multiplayer.CurrentPlayers=Current players",
-           "Interface.Tips.Multiplayer.Ping=Ping",
-           "Interface.Tips.PopupUnitDerived=\n&00FFFF\"Right mouse button\"&FFFFFF to order basic robots\nfor one unit, with &00FFFF\"Shift\"&FFFFFF for five units.",
-           "Interface.Menu.Messages.WrongIPPort=IP port is wrong",
-           "Interface.Menu.Messages.Multiplayer.IncorrectContent=Server has different game content",
-           "Interface.Menu.Messages.Multiplayer.IncorrectArch=Server has different bits or CPU architecture, different build type (Debug/Release), Operating System or used a different compiler (MSVC/Clang/GCC), please ensure they match",
-           "Interface.Menu.Messages.Multiplayer.SignatureError=Signature or CRC checks failed, connection may be unreliable",
-           "Interface.Menu.Messages.Multiplayer.HostTerminated=Host has terminated session or disconnected",
-           "Interface.Menu.Messages.Multiplayer.StartingGame=Starting the game...",
-           "Interface.Menu.Messages.Multiplayer.ChatTip=Press &00FFFF\"Insert\"&FFFFFF to chat with your clan players, &00FFFF\"Control + Insert\"&FFFFFF or &00FFFF\"Control + Space\"&FFFFFF to chat with all players.",
-           "Interface.Menu.Messages.Multiplayer.Kicked=You got kicked.",
-           "Interface.Menu.Messages.Confirmations.PendingChanges=Pending changes will not be applied, return to main menu?",
-           "Interface.Menu.Messages.Confirmations.ApplyChangesRestart=Game restart is required to apply changes, are you sure?",
-           "Interface.Menu.Messages.Confirmations.OpenWeb=Open the website?",
+#include "Texts_en.h"
            //Empty to not mess with ,'s
            ""
        }, false, locale);

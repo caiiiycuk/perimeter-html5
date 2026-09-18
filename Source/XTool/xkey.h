@@ -5,10 +5,16 @@
  * Virtual Keys, Standard Set
  */
 
+#define VK_MASK           0xFF
+#define VK_MAX_CODE       VK_MASK
+
+#define VK_NONE           0x0
 #define VK_LBUTTON        0x01
 #define VK_RBUTTON        0x02
 //#define VK_CANCEL         0x03
 #define VK_MBUTTON        0x04    /* NOT contiguous with L & RBUTTON */
+#define VK_XBUTTON1       0x05
+#define VK_XBUTTON2       0x06
 
 #define VK_BACK           0x08
 #define VK_TAB            0x09
@@ -94,17 +100,12 @@
 #define VK_NUMLOCK        0x90
 #define VK_SCROLL         0x91
 
-/*
- * VK_L* & VK_R* - left and right Alt, Ctrl and Shift virtual keys.
- * Used only as parameters to GetAsyncKeyState() and GetKeyState().
- * No other API or message will distinguish left and right keys in this way.
- */
-//#define VK_LSHIFT         0xA0
-//#define VK_RSHIFT         0xA1
-//#define VK_LCONTROL       0xA2
-//#define VK_RCONTROL       0xA3
-//#define VK_LMENU          0xA4
-//#define VK_RMENU          0xA5
+#define VK_LSHIFT         0xA0
+#define VK_RSHIFT         0xA1
+#define VK_LCONTROL       0xA2
+#define VK_RCONTROL       0xA3
+#define VK_LALT          0xA4
+#define VK_RALT          0xA5
 
 //#define VK_ATTN           0xF6
 //#define VK_CRSEL          0xF7

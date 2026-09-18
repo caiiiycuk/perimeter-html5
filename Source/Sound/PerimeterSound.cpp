@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "StdAfxSound.h"
 #include "PerimeterSound.h"
 #include "SoundInternal.h"
@@ -208,7 +209,7 @@ bool SNDInitSound(int mixChannels, int chunkSizeFactor)
         AllocateMixChannel(index, SND_GROUP_EFFECTS);
     }
     
-    SNDSetupChannelCallback(true);
+    SNDSetupChannelCallback(mixChannels, true);
 
 	pause_level = 0;
 
@@ -219,7 +220,7 @@ void SNDReleaseSound()
 {
 	if (!has_sound_init) return;
 
-    SNDSetupChannelCallback(false);
+    SNDSetupChannelCallback(0, false);
 
 	script3d.RemoveAll();
 	script2d.RemoveAll();
@@ -261,8 +262,7 @@ bool SNDScriptPrmEnable(const SoundScriptPrm& prm)
 
 bool SNDScriptPrmEnableAll()
 {
-    SingletonPrm<SoundScriptTable>::load();
-	for (const auto& i : soundScriptTable().table) {
+	for (auto& i : soundScriptTable().table) {
         SNDScriptPrmEnable(i);
     }
 

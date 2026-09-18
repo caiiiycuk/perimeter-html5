@@ -70,15 +70,14 @@ public:
 	void KeyUnpressed(sKey &key);
 	bool DebugKeyPressed(sKey& Key);
 	void editParameters();
-	void ControlPressed(int key);
-	void ControlUnpressed(int key);
+	void ControlPressed(uint32_t key);
+	void ControlUnpressed(uint32_t key);
 	void MouseLeftPressed(const Vect2f& pos);
 	void MouseRightPressed(const Vect2f& pos);
 	void MouseRightUnpressed(const Vect2f& pos);
 	void MouseLeftUnpressed(const Vect2f& pos);
 
-	void MouseMidPressed(const Vect2f& pos);
-	void MouseMidUnpressed(const Vect2f& pos);
+	void MouseButton(const Vect2f& pos, uint32_t key, bool pressed);
 
 	void MouseMove(const Vect2f& pos, const Vect2f& rel);
 	void MouseLeftDoubleClick(const Vect2f& pos);
@@ -295,6 +294,9 @@ public:
 	}
 
     void setCameraMouseShift(bool cameraMouseShift);
+    
+    void setCaptureInputCallback(bool (*input_callback)(uint32_t key, bool press));
+    bool hasCaptureInputCallback();
 
 private:
 	class CChaos* chaos;
@@ -392,6 +394,10 @@ private:
 	int soundPushedPushLevel;
 
 	DebugPrm debugPrm_;
+
+    bool (*CaptureControlInput)(uint32_t key, bool press) = nullptr;
+
+    uint32_t lastActivatedControlKey = 0;
 };
 
 extern GameShell* gameShell;

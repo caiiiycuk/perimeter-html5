@@ -77,7 +77,7 @@ const char* currentVersion =
 " 32b"
 #endif
 #ifdef GPX
-" html5 v8"
+" html5 v12"
 #endif
 ;
 

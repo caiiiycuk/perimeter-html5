@@ -1484,6 +1484,15 @@ void CShellIconManager::SwitchMenuScreens(int id_off, int id_on) {
                 break;
         }
         if (!initial_menu.empty()) {
+#ifdef EMSCRIPTEN
+            //Process restart is impossible in browser: main loop never returns and execv() is never reached,
+            //so leaving the content would end up in a dead "game finished but process alive" state.
+            //Stay inside selected content and return to the menu the game was started with.
+            id_on = initialMenu;
+            if (id_on == id_off) {
+                return;
+            }
+#else
             std::vector<std::string> args;
             args.emplace_back("tmp_start_splash=0");
             if (initial_menu != "START") {
@@ -1492,6 +1501,7 @@ void CShellIconManager::SwitchMenuScreens(int id_off, int id_on) {
             request_application_restart(&args);
             //We play splash since "we are leaving the content" and user may not see content specific splash otherwise
             id_on = SQSH_MM_SPLASH_LAST;
+#endif
         }
     }
 

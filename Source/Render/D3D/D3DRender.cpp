@@ -4,6 +4,7 @@
 #endif
 #include "StdAfxRD.h"
 #include "D3DRender.h"
+#include <chrono>
 #ifdef GPX
 #include <c/gamepix.h>
 #endif
@@ -793,6 +794,22 @@ int cD3DRender::Flush(bool wnd)
 	lpD3DDevice->Present(&rect, &rect, wnd ? hWnd : nullptr, nullptr);
 #if defined(PERIMETER_VKDAWN)
 	vkdawn_presented();
+#endif
+#ifdef PERIMETER_DEBUG
+	{
+		static std::vector<double> frame_ms;
+		static auto last = std::chrono::steady_clock::now();
+		static auto report = last;
+		auto now = std::chrono::steady_clock::now();
+		frame_ms.push_back(std::chrono::duration<double, std::milli>(now - last).count());
+		last = now;
+		if (now - report >= std::chrono::seconds(5)) {
+			std::nth_element(frame_ms.begin(), frame_ms.begin() + frame_ms.size() / 2, frame_ms.end());
+			fprintf(stderr, "frame: median %.1f ms (%zu frames)\n", frame_ms[frame_ms.size() / 2], frame_ms.size());
+			frame_ms.clear();
+			report = now;
+		}
+	}
 #endif
 
 	if(Option_DrawNumberPolygon) 

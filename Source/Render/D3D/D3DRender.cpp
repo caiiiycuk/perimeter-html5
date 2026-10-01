@@ -183,12 +183,14 @@ uint32_t cD3DRender::GetD3DFVFFromFormat(vertex_fmt_t fmt) {
 
 uint32_t cD3DRender::GetWindowCreationFlags() const {
     uint32_t flags = cInterfaceRenderDevice::GetWindowCreationFlags();
-#if !defined(_WIN32) && !defined(PERIMETER_GICH)
+#if !defined(_WIN32) && !defined(PERIMETER_GICH) && !defined(PERIMETER_VKDAWN)
     //On non Windows we use dxvk which uses Vulkan
     flags |= SDL_WINDOW_VULKAN;
 #endif
     //With the shim (PERIMETER_GICH) the window is for input only: the shim
     //draws through EGL on Linux and WebGL on the web, and asks for no flag.
+    //With vkdawn (PERIMETER_VKDAWN) likewise: the layer presents to the canvas
+    //or hands frames back, which D3DRenderVkdawn.cpp blits into the window.
     return flags;
 }
 
@@ -197,6 +199,13 @@ uint32_t cD3DRender::GetWindowCreationFlags() const {
 //collides with XTool's struct of the same name, so it cannot be included here
 //next to the game's headers.
 void gich_hand_over_window(SDL_Window* window);
+#endif
+#if defined(PERIMETER_VKDAWN)
+//In D3DRenderVkdawn.cpp.
+void vkdawn_hand_over_window(SDL_Window* window);
+void vkdawn_window_resized(SDL_Window* window, int w, int h);
+void vkdawn_presented();
+void vkdawn_report();
 #endif
 
 int cD3DRender::Init(int xscr,int yscr,int Mode, SDL_Window* wnd, int RefreshRateInHz)
@@ -214,6 +223,9 @@ int cD3DRender::Init(int xscr,int yscr,int Mode, SDL_Window* wnd, int RefreshRat
     this->hWnd = get_hwnd_from_sdl_window(sdl_window);
 #if defined(PERIMETER_GICH) && !defined(__EMSCRIPTEN__)
     gich_hand_over_window(sdl_window);
+#endif
+#if defined(PERIMETER_VKDAWN)
+    vkdawn_hand_over_window(sdl_window);
 #endif
 
 #ifndef _WIN32
@@ -438,6 +450,11 @@ void cD3DRender::UpdateRenderMode()
     d3dpp.BackBufferWidth = MaxScreenSize.x;
     d3dpp.BackBufferHeight = MaxScreenSize.y;
     fprintf(stdout, "D3D Backbuffer size: %dx%d\n", d3dpp.BackBufferWidth, d3dpp.BackBufferHeight);
+#if defined(PERIMETER_VKDAWN)
+    //The headless WSI learns the window size only from us; dxvk-st re-reads it
+    //on the next Present and resizes the swapchain.
+    vkdawn_window_resized(sdl_window, ScreenSize.x, ScreenSize.y);
+#endif
 
 	if(RenderMode&RENDERDEVICE_MODE_COMPRESS)
 	{
@@ -674,6 +691,9 @@ int cD3DRender::Done()
     int ret = cInterfaceRenderDevice::Done();
 	
 	bActiveScene=0;
+#if defined(PERIMETER_VKDAWN)
+	if (lpD3D) vkdawn_report();
+#endif
 	RELEASE(lpD3DDevice);
 	RELEASE(lpD3D);
 
@@ -771,6 +791,9 @@ int cD3DRender::Flush(bool wnd)
 
 	RECT rect { 0, 0, ScreenSize.x, ScreenSize.y };
 	lpD3DDevice->Present(&rect, &rect, wnd ? hWnd : nullptr, nullptr);
+#if defined(PERIMETER_VKDAWN)
+	vkdawn_presented();
+#endif
 
 	if(Option_DrawNumberPolygon) 
 	{

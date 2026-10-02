@@ -111,7 +111,7 @@ void HTManager::GameStart(const MissionDescription& mission)
         }
 
 #ifdef GPX
-    gpx()->sdk4()->interstitialAd();
+    gpx()->sdk5()->interstitialAd();
 #endif
 }
 
@@ -134,7 +134,7 @@ void HTManager::GameClose()
         MT_SET_TYPE(MT_GRAPH_THREAD);
 
 #ifdef GPX
-        gpx()->sdk4()->interstitialAd();
+        gpx()->sdk5()->interstitialAd();
 #endif
 }
 

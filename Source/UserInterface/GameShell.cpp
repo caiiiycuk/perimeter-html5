@@ -2585,7 +2585,7 @@ void GameShell::setSpeed(float d)
 
 #ifdef GPX
     if (d < 1) {
-        gpx()->sdk4()->interstitialAd();
+        gpx()->sdk5()->interstitialAd();
     }
 #endif
 }

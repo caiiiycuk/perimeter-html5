@@ -21,7 +21,10 @@ namespace {
         SDL_Surface* src = SDL_CreateRGBSurfaceFrom(const_cast<uint8_t*>(rgb), w, h, 24, w * 3,
                                                     0x0000FF, 0x00FF00, 0xFF0000, 0);
         if (dst && src) {
-            SDL_BlitScaled(src, nullptr, dst, nullptr);
+            if (dst->w == (int)w && dst->h == (int)h)
+                SDL_BlitSurface(src, nullptr, dst, nullptr);
+            else
+                SDL_BlitScaled(src, nullptr, dst, nullptr);
             SDL_UpdateWindowSurface(g_window);
         }
         SDL_FreeSurface(src);
@@ -48,6 +51,9 @@ void vkdawn_hand_over_window(SDL_Window* window) {
 #if defined(__EMSCRIPTEN__)
     cfg.canvas_selector = "#canvas";
 #else
+    //SDL2 otherwise backs the window surface with a GL texture, which on a
+    //headless X server means llvmpipe on the main thread; XShm is enough.
+    SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "0");
     cfg.frame_fn = blit_frame;
 #endif
     vkdawn_set_config(&cfg);
